@@ -1,0 +1,162 @@
+ECS
+---
+
+Container management service.
+using ECS, you can start/stop/manage containers.
+using ECS, you can easily launch ontainer based application with API call.
+it basically splits the user processes into multiple spaces. the isolated user processes are containers.
+containers enable microservices. microservice splits the application into smaller chunks.
+the user processes run on the same host.
+to plan the microservice architecture, container is the best solution.
+
+suppose 200 developrs deploy their codes as containers.
+all the containers are being deployed in same server.
+there is chance of containers being dead .TEH chance of host server being out of space to contain the containers.
+--So This is managed by ECS.
+
+utility :
+
+1. it simplifies the container management.
+
+2. removes cluster management software.
+
+3. manage cluster state using ECS.
+
+4. Integrated using ECR (Elasic container registry), ELB, EBS, ENI, VPC, 
+
+
+IAM user and Federate user:
+---------------------------
+
+IAM users are permanent entity. Federate users do not have permanent entity. They need to be assigned a role.
+
+1-B
+2-C
+3-B,D
+4-A
+5-B,C
+6-D
+7-A
+8-B
+9-B,C
+10-D
+
+
+Application Load balancer vs Classic load balancer:
+---------------------------------------------------
+ALB can do path based routing. CLB does not allow Path based routing. It only allows health check.
+To route different application server based on different URL, there should be multiple CLB.
+In contrast, only 1 ALB can server the purpose.
+
+ALB supports at most 10 applications using path based routing.
+So pay for 1 ALB instead of 10 CLB.
+
+With CLB, you can register one instance to the load balancer only once. If the port got changed and you want to attach the same 
+instance to the CLB you have to de-register and then register it.
+But ALB allows configuring the same instance to same load balancer using different ports.
+Very useful for conainer based application. it gives dynamic port mapping.
+
+Load balancer listens to the port and protocol for the incoming traffic.
+LB needs at least 1 listener.
+
+for ALB, the listener should be HTTP, HTTPS.
+for NLB, the listener should be TCP.
+port can be 1 to 65,535
+each LB can support upto 10 listeners.
+
+Target group:
+-------------
+
+Logical grouping of target for the load balancer.
+Target can be EC2 instance, microservice, continer based application for ALB.
+Target can be instance , IP address for NLB.
+Same EC2 can be registered with same target group multiple times using multiple ports.
+Same target can be part of different target groups.
+
+Rules:
+------
+establishes the link between listener and target group. Route the traffic to target group whenever the rule is applied.
+path pattern can have max 128 chars.
+rule are having priority attached. Default rule has lowest priority.
+
+Health Check:
+-------------
+
+keep on checking the health of the instances.
+HalthCheckIntervalSecond --> the time in sec between two health check request.
+
+to check the health --> 1) port, 2) protocol, 3) ping path
+the target should respond before timeout.
+
+Can customize the frequency of health check, failure threshold, successful response code list.
+healthcheck status --> Initial, Healthy, Unhealthy, 
+Unused (target is not registered with the target group/target is in AZ where load balancer is not enabled), Draining.
+
+Cross Zone LB:
+--------------
+
+CZ Load balancing is enabled by default for ALB.
+CZ load balancing can be set up manually for CLB.
+CZ load balancing happens across the target not across the AZ.
+If you have 1 inst in 1 AZ, and 3 inst in another AZ. Then with CZ load balancing, the traffic will be distributed equally among 4 inst.
+not equally among the AZs.
+
+Sticky session:
+---------------
+
+NLB allows the use of sticky sessions.
+same source can connect to same target EC2 instance for repeated request.
+algorithm used: Source IP, Source port, Destination Port, Destination IP, protocol.
+Thus EC2 inst can cache the user data for better performance.
+
+** VPC FLOW LOG **
+-------------------
+
+VPC flow log allows the user to analyze the incoming and outgoing traffic in and out of VPC, subnet, network interface etc.
+Certain types of traffic can be accepted or rejected and are recorded in the Cloudwatch log.
+Can create alarm that if some types of traffic is detected , some action is performed e.g. accept/reject.
+The log contains the source/target IP address, ports.
+It can capture accepted traffic/rejected traffic or both.
+Use : security monitoring and application troubleshooting.
+
+** AWS CloudTrail **
+---------------------
+The service used to capture the events of all kinds of API call from console or CLI. 
+who has called to whom, which resources are affected for this call are captured using cloudtrail.
+the logfile is validated and sent to S3 bucket.
+every region can have upto 5 cloudtrails set up.
+It maintain the API call history.
+it can contain the log of API call history for a single region upto last 90 days.
+the logfile stored in S3 is encrypted using SSE S3 (Server side encryption).
+cloudtrail can be associated to cloudwatch for real time monitoring.
+multiple AWS accounts can send their trail to one account and then consolidated API log could be analyzed further.
+
+** AWS Beanstalk **
+-------------------
+
+It consists of three components - 
+1. Infrastructure components e.g. EC2, ELB, VPC, subnet, RDS, auto scaling group.
+2. Versioning - each application deployed in EBS should have one version ID attahed.each version is stored separately.
+3. saved configuration - how a env and its resources will behave. used to launch new env quickly.
+
+application can have multiple saved configurations.
+
+If application is deployed in multiple instances then EBS provisions auto scaling, load balancer etc.
+the configutaion file of EBS is in JSON/YAML format.
+it can check the health of the application deployed using cloudwatch metrics (40+ metrics)
+
+
+** AWS SNS **
+-------------
+
+Serverless micoservice architecture
+send notification from cloud
+asynchronous delivery of messages from publisher to subscriber.
+msgs published to the topic is immediately available to subscribers.
+topic - communication channel.
+subscribers are to subscribe to end points e.g. URL, phone, email etc.
+SNS will deliver the msg published to the topic to every endpints sbscribed for that topic.
+
+1. it is integrated with clouwatch so as to collect the stat and analyze the SNS topic.
+2. Limitaion - 256KB of data except SMS which is of 140 byte of limit.
+3. transfer protocol - HTTP/HTTPS, email, SMS, Lambda, SQS
